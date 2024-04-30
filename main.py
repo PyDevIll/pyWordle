@@ -87,14 +87,24 @@ def load_words_by_level(n):
     return result
 
 
+def new_game(level):
+    word_list = load_words_by_level(level)
+    return {
+        "secret_word": word_list[randint(0, len(word_list))],
+        "attempt": 1
+    }
+
+
 max_attempt = 6
+game_info = {}
+terminate = False
 
 if __name__ == "__main__":
     print("\t\t-= ВОРДЛИ =-")
     print()
     print(f"Угадайте загаданное слово за {max_attempt} попыток")
     print()
-    while True:
+    while not terminate:
         print("Выберите сложность:")
         print("1. Нормально")
         print("2. Сложно")
@@ -107,7 +117,8 @@ if __name__ == "__main__":
             rate_wordlist()
             continue
 
-        word_list = load_words_by_level(select)
+        game_info = new_game(select)
+        while not terminate:
+            ...
 
     print("До свидания!")
-
