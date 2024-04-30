@@ -45,12 +45,13 @@ def rate_word(w_rating, w):
 
 def rate_wordlist():
     wl = load_words_by_len("russian_nouns.txt")
-    print("imported", len(wl), "words")
+    print("Word rating update mode activated.")
+    print("Imported", len(wl), "words.")
 
     w_rating = load_w_ratings()
     if w_rating is None:
         return
-    print("Rated", len(w_rating), "words")
+    print("Rated", len(w_rating), "words.")
     while True:
         w = wl[randint(0, len(wl))]
         new_r = rate_word(w_rating, w)
@@ -58,7 +59,55 @@ def rate_wordlist():
         w_rating[w] = new_r
 
 
-if __name__ == "__main__":
-    ...
+def get_number(prompt, default=None):
+    # returns integer, or default otherwise
+    try:
+        return int(input(prompt))
+    except ValueError:
+        # Если значение по умолчанию не предусмотрено, значит ошибка ввода
+        if default is None:
+            print(" -! Ожидался ввод числа. Операция прервана !- ")
+    return default
 
+
+def load_words_by_level(n):
+    if n == 1:
+        rate_fits_level = lambda r: r == 5
+    elif n == 2:
+        rate_fits_level = lambda r: (r == 4) or (r == 3)
+    elif n == 3:
+        rate_fits_level = lambda r: (r == 2) or (r == 1)
+    elif n == 4:
+        rate_fits_level = lambda r: (r == 1) or (r == 0)
+    else:
+        rate_fits_level = lambda r: True
+
+    wr = load_w_ratings()
+    result = [w for w, r in wr.items() if rate_fits_level(r)]
+    return result
+
+
+max_attempt = 6
+
+if __name__ == "__main__":
+    print("\t\t-= ВОРДЛИ =-")
+    print()
+    print(f"Угадайте загаданное слово за {max_attempt} попыток")
+    print()
+    while True:
+        print("Выберите сложность:")
+        print("1. Нормально")
+        print("2. Сложно")
+        print("3. Кошмар")
+        print("4. Ужас")
+        print()
+        if (select := get_number("Ваш выбор (1-4, ENTER - выход): ")) is None:
+            break
+        if select not in range(1, 5):
+            rate_wordlist()
+            continue
+
+        word_list = load_words_by_level(select)
+
+    print("До свидания!")
 
