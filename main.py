@@ -90,10 +90,11 @@ def load_words_by_level(n):
 
 
 def new_game(level):
+    print("Началась новая игра. Вводите слова и следуйте подсказкам")
     word_list = load_words_by_level(level)
     return {
-        "secret_word": word_list[randint(0, len(word_list))],
-        "attempt": 1
+        "secret_word": word_list[randint(0, len(word_list)-1)],
+        "attempt": 0
     }
 
 
@@ -115,26 +116,73 @@ def word_is_valid(w):
 
 def game_make_attempt(game_info):
     if game_info["attempt"] >= max_attempt:
-        end_game(game_info)
+        return end_game(game_info)
     game_info["attempt"] += 1
-    print(f"Введите слово из {word_length} букв")
     while True:
         user_word = input()
+        if user_word == '':
+            return end_game(game_info)
         if word_is_valid(user_word):
             break
-        else:
-            print("Кажется это слово не подходит. Попробуйте еще раз")
+        print("Кажется это слово не подходит. Попробуйте еще раз")
     game_info["user_word"] = user_word
+    return True
 
 
 def game_check_attempt(game_info):
-    ...
+    result = [0] * word_length
+
+    hint_include_letters = game_info.get("hint_inc", [])
+    hint_exclude_letters = game_info.get("hint_exc", [])
+    w = game_info["user_word"]
+    s = game_info["secret_word"]
+    w_pos = 0
+    for w_letter in w:
+        s_pos = s.find(w_letter)
+        if s_pos >= 0:
+            result[w_pos] += 1       # 1 = letter hit
+            hint_include_letters.append(w_letter)
+            s = s.replace(w_letter, '_', 1)   # replace guessed letter, so it can't be hit twice
+            if s_pos == w_pos:
+                result[w_pos] += 1   # 2 = letter and pos hit
+        else:
+            hint_exclude_letters.append(w_letter)
+        w_pos += 1
+
+    if sum(result) == word_length * 2:
+        return end_game(game_info, can_repeat=True)
+
+    game_info["hint_exc"] = hint_exclude_letters
+    game_info["hint_inc"] = hint_include_letters
+    game_info["result"] = result
+    return True
 
 
-def end_game(game_info):
-    global terminate
-    terminate = True
-    ...
+def game_draw_result(game_info):
+    result = game_info.get("result", [0] * word_length)
+    result_sym = '_?!'
+    result_str = ''
+    for i in range(word_length):
+        result_str += result_sym[result[i]]
+
+    print(result_str)
+    print()
+
+
+def end_game(game_info, can_repeat=False):
+    if not can_repeat:
+        global terminate
+        terminate = True
+        print("Игра окончена")
+        return False
+
+    print("Использовано попыток :", game_info["attempt"])
+    print(f"Было загадано слово: \"{game_info["secret_word"]}\"")
+    answer = input("Хотите начать заново? (введите - \"да\")")
+    if answer == "да" or answer == "lf":
+        return False
+    else:
+        end_game(game_info)
 
 
 max_attempt = 6
@@ -145,7 +193,7 @@ global terminate
 if __name__ == "__main__":
     print("\t\t-= ВОРДЛИ =-")
     print()
-    print(f"Угадайте загаданное слово за {max_attempt} попыток")
+    print(f"Угадайте загаданное слово из {word_length} букв за {max_attempt} попыток")
     print()
     terminate = False
     while not terminate:
@@ -163,8 +211,11 @@ if __name__ == "__main__":
 
         game_info = new_game(select)
         while not terminate:
-            game_make_attempt(game_info)
-            game_check_attempt(game_info)
-            ...
+            if not game_make_attempt(game_info):
+                break
+            if not game_check_attempt(game_info):
+                break
+            game_draw_result(game_info)
+
 
     print("До свидания!")
