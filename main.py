@@ -114,10 +114,23 @@ def word_is_valid(w):
     return False
 
 
+def game_show_hints(game_info):
+    hint_inc = game_info.get("hint_inc", '')
+    hint_exc = game_info.get("hint_exc", '')
+    if (hint_inc != '') or (hint_exc != ''):
+        print("Подсказка: ")
+        if hint_inc != '':
+            print("Включите в Ваше слово буквы:", str(hint_inc))
+        if hint_exc != '':
+            print("Этих букв точно нет в загаданном слове:", str(hint_exc))
+
+
 def game_make_attempt(game_info):
     if game_info["attempt"] >= max_attempt:
         return end_game(game_info)
     game_info["attempt"] += 1
+
+    game_show_hints(game_info)
     while True:
         user_word = input()
         if user_word == '':
@@ -132,27 +145,29 @@ def game_make_attempt(game_info):
 def game_check_attempt(game_info):
     result = [0] * word_length
 
-    hint_include_letters = game_info.get("hint_inc", [])
-    hint_exclude_letters = game_info.get("hint_exc", [])
+    hint_include_letters = game_info.get("hint_inc", set())
+    hint_exclude_letters = game_info.get("hint_exc", set())
     w = game_info["user_word"]
     s = game_info["secret_word"]
     w_pos = 0
     for w_letter in w:
-        s_pos = s.find(w_letter)
-        if s_pos >= 0:
-            result[w_pos] += 1       # 1 = letter hit
-            hint_include_letters.append(w_letter)
-            s = s.replace(w_letter, '_', 1)   # replace guessed letter, so it can't be hit twice
-            if s_pos == w_pos:
-                result[w_pos] += 1   # 2 = letter and pos hit
-        else:
-            hint_exclude_letters.append(w_letter)
+        while True:
+            s_pos = s.find(w_letter)
+            if s_pos >= 0:                                TODO: Fix checking so that s='шафер', w='плеер', -> '___!!', not '__?_!'
+                result[w_pos] += 1       # 1 = letter hit
+                hint_include_letters.add(w_letter)
+                s = s.replace(w_letter, '_', 1)   # replace guessed letter, so it can't be hit twice
+                if s_pos == w_pos:
+                    result[w_pos] += 1   # 2 = letter and pos hit
+            else:
+                hint_exclude_letters.add(w_letter)
+                break
         w_pos += 1
 
     if sum(result) == word_length * 2:
         return end_game(game_info, can_repeat=True)
 
-    game_info["hint_exc"] = hint_exclude_letters
+    game_info["hint_exc"] = (hint_exclude_letters - hint_include_letters)
     game_info["hint_inc"] = hint_include_letters
     game_info["result"] = result
     return True
