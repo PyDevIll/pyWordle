@@ -1,10 +1,10 @@
 from random import randint
 
 
-def load_words_by_len(fname, max_length=5):
+def load_words_by_len(fname):
     with open(fname, 'r', encoding='utf-8') as f:
         while (w := f.readline().strip()) != '':
-            if len(w) == max_length:
+            if len(w) == word_length:
                 yield w
 
 
@@ -97,15 +97,57 @@ def new_game(level):
     }
 
 
+def word_is_valid(w):
+    if len(w) != word_length:
+        return False
+
+    cyr_letters = "абвгдеёзжийклмнопрстуфхцчшщъыьэюя"
+    if not all(w_letter in cyr_letters for w_letter in w):
+        return False
+
+    w = w.replace("ё", "е")
+    # check if w in dictionary
+    for w_dict in load_words_by_len("russian_nouns.txt"):
+        if w_dict.replace("ё", "е") == w:
+            return True
+    return False
+
+
+def game_make_attempt(game_info):
+    if game_info["attempt"] >= max_attempt:
+        end_game(game_info)
+    game_info["attempt"] += 1
+    print(f"Введите слово из {word_length} букв")
+    while True:
+        user_word = input()
+        if word_is_valid(user_word):
+            break
+        else:
+            print("Кажется это слово не подходит. Попробуйте еще раз")
+    game_info["user_word"] = user_word
+
+
+def game_check_attempt(game_info):
+    ...
+
+
+def end_game(game_info):
+    global terminate
+    terminate = True
+    ...
+
+
 max_attempt = 6
-game_info = {}
-terminate = False
+word_length = 5
+
+global terminate
 
 if __name__ == "__main__":
     print("\t\t-= ВОРДЛИ =-")
     print()
     print(f"Угадайте загаданное слово за {max_attempt} попыток")
     print()
+    terminate = False
     while not terminate:
         print("Выберите сложность:")
         print("1. Нормально")
@@ -121,6 +163,8 @@ if __name__ == "__main__":
 
         game_info = new_game(select)
         while not terminate:
+            game_make_attempt(game_info)
+            game_check_attempt(game_info)
             ...
 
     print("До свидания!")
