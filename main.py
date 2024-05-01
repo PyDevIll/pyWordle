@@ -27,28 +27,34 @@ def save_w_ratings(w_rating):
 
 
 def rate_word(w_rating, w):
+    max_rating = 6
     r = w_rating.get(w, -1)
     print(f"{w}. Rating: {r}. ", end='')
     try:
         new_r = int(input("Rate this word (0-5, ENTER to stop): "))
     except ValueError:
         return
-    if new_r not in range(0, 6):
+    if new_r not in range(0, max_rating + 1):
         print("Rate hasn't been accepted!")
         return r
     save_w_ratings(w_rating)
     return new_r
 
 
-def rate_wordlist():
+def rate_wordlist(rewise_rating=-1):
     print("Word rating update mode activated.")
 
     w_rating = load_w_ratings()
     if w_rating is None:
         return
     print("Rated", len(w_rating), "words.")
+    ok = False
     for w in load_words_by_len("russian_nouns.txt", 5):
-        if w not in w_rating.keys():
+        if rewise_rating == -1:
+            ok = (w not in w_rating.keys())
+        else:
+            ok = (w_rating[w] == rewise_rating)
+        if ok:
             new_r = rate_word(w_rating, w)
             if new_r is None: break
             w_rating[w] = new_r
