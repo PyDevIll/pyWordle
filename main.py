@@ -117,12 +117,12 @@ def word_is_valid(w):
 def game_show_hints(game_info):
     hint_inc = game_info.get("hint_inc", '')
     hint_exc = game_info.get("hint_exc", '')
-    if (hint_inc != '') or (hint_exc != ''):
+    if len(hint_inc) > 0 or len(hint_exc) > 0:
         print("Подсказка: ")
-        if hint_inc != '':
-            print("Включите в Ваше слово буквы:", str(hint_inc))
-        if hint_exc != '':
-            print("Этих букв точно нет в загаданном слове:", str(hint_exc))
+        if len(hint_inc) > 0:
+            print("\tВключите в Ваше слово буквы:", ' '.join(hint_inc).strip())
+        if len(hint_exc) > 0:
+            print("\tЭтих букв точно нет в загаданном слове:", ' '.join(hint_exc).strip())
 
 
 def game_make_attempt(game_info):
@@ -143,26 +143,37 @@ def game_make_attempt(game_info):
 
 
 def game_check_attempt(game_info):
+    def replace_char(s, pos, char):
+        s = list(s)
+        s[pos] = char
+        return ''.join(s)
+
     result = [0] * word_length
 
     hint_include_letters = game_info.get("hint_inc", set())
     hint_exclude_letters = game_info.get("hint_exc", set())
+
     w = game_info["user_word"]
     s = game_info["secret_word"]
-    w_pos = 0
+    w_pos = -1
     for w_letter in w:
-        while True:
-            s_pos = s.find(w_letter)
-            if s_pos >= 0:                                TODO: Fix checking so that s='шафер', w='плеер', -> '___!!', not '__?_!'
-                result[w_pos] += 1       # 1 = letter hit
-                hint_include_letters.add(w_letter)
-                s = s.replace(w_letter, '_', 1)   # replace guessed letter, so it can't be hit twice
-                if s_pos == w_pos:
-                    result[w_pos] += 1   # 2 = letter and pos hit
-            else:
-                hint_exclude_letters.add(w_letter)
-                break
         w_pos += 1
+        if w_letter == s[w_pos]:
+            result[w_pos] = 2       # 2 = letter and pos hit
+            s = replace_char(s, w_pos, '_')  # replace guessed letter, so it can't be hit twice
+            hint_include_letters.add(w_letter)
+    w_pos = -1
+    for w_letter in w:
+        w_pos += 1
+        if result[w_pos] != 0:
+            continue
+        s_pos = s.find(w_letter)
+        if s_pos >= 0:
+            result[w_pos] = 1       # 1 = letter hit
+            s = replace_char(s, s_pos, '_')      #   replace guessed letter, so it can't be hit twice
+            hint_include_letters.add(w_letter)
+        else:
+            hint_exclude_letters.add(w_letter)
 
     if sum(result) == word_length * 2:
         return end_game(game_info, can_repeat=True)
@@ -200,17 +211,12 @@ def end_game(game_info, can_repeat=False):
         end_game(game_info)
 
 
-max_attempt = 6
-word_length = 5
+def main():
 
-global terminate
-
-if __name__ == "__main__":
     print("\t\t-= ВОРДЛИ =-")
     print()
     print(f"Угадайте загаданное слово из {word_length} букв за {max_attempt} попыток")
     print()
-    terminate = False
     while not terminate:
         print("Выберите сложность:")
         print("1. Нормально")
@@ -232,5 +238,12 @@ if __name__ == "__main__":
                 break
             game_draw_result(game_info)
 
-
     print("До свидания!")
+
+
+max_attempt = 6
+word_length = 5
+terminate = False
+
+if __name__ == "__main__":
+    main()
