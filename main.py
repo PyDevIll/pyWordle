@@ -138,7 +138,7 @@ def game_make_attempt(game_info):
         if word_is_valid(user_word):
             break
         print("Кажется это слово не подходит. Попробуйте еще раз")
-    game_info["user_word"] = user_word
+    game_info["user_word"] = user_word.lower()
     return True
 
 
