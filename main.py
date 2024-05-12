@@ -1,7 +1,7 @@
 from random import randint
 
 
-def load_words_by_len(fname):
+def load_words_by_len(fname, word_length):
     with open(fname, 'r', encoding='utf-8') as f:
         while (w := f.readline().strip()) != '':
             if len(w) == word_length:
@@ -41,15 +41,20 @@ def rate_word(w_rating, w):
     return new_r
 
 
-def rate_wordlist(rewise_rating=-1):
+def rate_wordlist():
     print("Word rating update mode activated.")
+    print("""
+        Enter word rating number (0-5) to rewise already rated words
+        or press ENTER to rate new words
+    """)
+    rewise_rating = get_number(': ', -1)
 
     w_rating = load_w_ratings()
     if w_rating is None:
         return
     print("Rated", len(w_rating), "words.")
     ok = False
-    for w in load_words_by_len("russian_nouns.txt", 5):
+    for w in load_words_by_len("russian_nouns.txt", word_length):
         if rewise_rating == -1:
             ok = (w not in w_rating.keys())
         else:
@@ -108,7 +113,7 @@ def word_is_valid(w):
 
     w = w.replace("ё", "е")
     # check if w in dictionary
-    for w_dict in load_words_by_len("russian_nouns.txt"):
+    for w_dict in load_words_by_len("russian_nouns.txt", word_length):
         if w_dict.replace("ё", "е") == w:
             return True
     return False
@@ -127,7 +132,7 @@ def game_show_hints(game_info):
 
 def game_make_attempt(game_info):
     if game_info["attempt"] >= max_attempt:
-        return end_game(game_info)
+        return end_game(game_info, event='noattempts')
     game_info["attempt"] += 1
 
     game_show_hints(game_info)
@@ -160,7 +165,7 @@ def game_check_attempt(game_info):
         w_pos += 1
         if w_letter == s[w_pos]:
             result[w_pos] = 2       # 2 = letter and pos hit
-            s = replace_char(s, w_pos, '_')  # replace guessed letter, so it can't be hit twice
+            s = replace_char(s, w_pos, '_')      # replace guessed letter, so it can't be hit twice
             hint_include_letters.add(w_letter)
     w_pos = -1
     for w_letter in w:
@@ -170,13 +175,13 @@ def game_check_attempt(game_info):
         s_pos = s.find(w_letter)
         if s_pos >= 0:
             result[w_pos] = 1       # 1 = letter hit
-            s = replace_char(s, s_pos, '_')      #   replace guessed letter, so it can't be hit twice
+            s = replace_char(s, s_pos, '_')      # replace guessed letter, so it can't be hit twice
             hint_include_letters.add(w_letter)
         else:
             hint_exclude_letters.add(w_letter)
 
     if sum(result) == word_length * 2:
-        return end_game(game_info, can_repeat=True)
+        return end_game(game_info, event='bingo')
 
     game_info["hint_exc"] = (hint_exclude_letters - hint_include_letters)
     game_info["hint_inc"] = hint_include_letters
@@ -195,16 +200,23 @@ def game_draw_result(game_info):
     print()
 
 
-def end_game(game_info, can_repeat=False):
-    if not can_repeat:
+def end_game(game_info, event=''):
+
+    if event == '':
         global terminate
         terminate = True
         print("Игра окончена")
         return False
 
-    print("Использовано попыток :", game_info["attempt"])
+    if event == 'noattempts':
+        print("К сожалению Вы использовали все попытки (\n")
+    if event == 'bingo':
+        print("СУПЕР! Вы смогли угадать слово!\n")
+        print("Использовано попыток :", game_info["attempt"])
+
     print(f"Было загадано слово: \"{game_info["secret_word"]}\"")
-    answer = input("Хотите начать заново? (введите - \"да\")")
+
+    answer = input("Хотите начать заново? (введите - \"да\")").lower()
     if answer == "да" or answer == "lf":
         return False
     else:
