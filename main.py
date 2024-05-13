@@ -1,11 +1,50 @@
 from random import randint
 
 
-def load_words_by_len(fname, word_length):
-    with open(fname, 'r', encoding='utf-8') as f:
-        while (w := f.readline().strip()) != '':
-            if len(w) == word_length:
+def load_words_by_len(fname, word_length, shuffled=False):
+    def read_nearest_valid_word(f):
+        while True:
+            w = f.readline().strip()
+            if w == '':                 # end of file
+                return None
+            if len(w) == word_length:   # valid word found
+                return w
+
+    def make_random_offset(f):
+        if not f.closed:
+            f.close()
+        # reset file position by reopening
+        f = open(fname, 'r', encoding='utf-8')
+        offset = randint(0, line_count)
+        for i in range(offset):
+            f.readline()
+        return f
+
+    def count_lines_in_file():
+        n = 0
+        with (open(fname, 'r', encoding='utf-8') as f):
+            while f.readline() != '': n += 1
+        return n
+
+    if shuffled:
+        line_count = count_lines_in_file()
+        f = open(fname, 'r', encoding='utf-8')
+        while True:
+            f = make_random_offset(f)
+            w = read_nearest_valid_word(f)
+            if w is None:
+                continue
+            yield w
+    else:
+        with (open(fname, 'r', encoding='utf-8') as f):
+            while True:
+                w = read_nearest_valid_word(f)
+                if w is None:
+                    break
                 yield w
+
+    if not f.closed:
+        f.close()
 
 
 def load_w_ratings():
@@ -15,8 +54,12 @@ def load_w_ratings():
         return
     w_rating = {}
     with f:
-        while (s := f.readline().strip()) != '':
-            w_rating[s.split(", ")[0]] = int(s.split(", ")[1])
+        while True:
+            s = f.readline().strip()
+            if s == '':
+                break
+            key, value = s.split(", ")
+            w_rating[key] = int(value)
         return w_rating
 
 
@@ -24,6 +67,17 @@ def save_w_ratings(w_rating):
     with open("words_rated.txt", 'w', encoding="utf-8") as f:
         for w, r in w_rating.items():
             f.write(f'{w}, {r}\n')
+
+
+def load_words_to_be_rated(rate_dict, rewise_rating=-1):
+    if rewise_rating == -1:
+        for w in load_words_by_len("russian_nouns.txt", word_length, shuffled=True):
+            if w not in rate_dict:
+                yield w
+    else:
+        for w, r in rate_dict.items():
+            if r == rewise_rating:
+                yield w
 
 
 def rate_word(w_rating, w):
@@ -37,12 +91,12 @@ def rate_word(w_rating, w):
     if new_r not in range(0, max_rating + 1):
         print("Rate hasn't been accepted!")
         return r
-    save_w_ratings(w_rating)
     return new_r
 
 
 def rate_wordlist():
-    print("Word rating update mode activated.")
+
+    print("Word rating mode activated.")
     print("""
         Enter word rating number (0-5) to rewise already rated words
         or press ENTER to rate new words
@@ -52,17 +106,14 @@ def rate_wordlist():
     w_rating = load_w_ratings()
     if w_rating is None:
         return
-    print("Rated", len(w_rating), "words.")
-    ok = False
-    for w in load_words_by_len("russian_nouns.txt", word_length):
-        if rewise_rating == -1:
-            ok = (w not in w_rating.keys())
-        else:
-            ok = (w_rating[w] == rewise_rating)
-        if ok:
-            new_r = rate_word(w_rating, w)
-            if new_r is None: break
-            w_rating[w] = new_r
+    print("Rated", len(w_rating.keys()), "words.")
+    for w in load_words_to_be_rated(w_rating, rewise_rating):
+        new_r = rate_word(w_rating, w)
+        if new_r is None:
+            break
+        w_rating[w] = new_r
+        save_w_ratings(w_rating)
+
     print()
 
 
