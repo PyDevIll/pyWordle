@@ -129,19 +129,20 @@ def get_number(prompt, default=None):
 
 
 def load_words_by_level(n):
-    if n == 1:
-        rate_fits_level = lambda r: r == 5
-    elif n == 2:
-        rate_fits_level = lambda r: (r == 4) or (r == 3)
-    elif n == 3:
-        rate_fits_level = lambda r: (r == 2) or (r == 1)
-    elif n == 4:
-        rate_fits_level = lambda r: (r == 1) or (r == 0)
-    else:
-        rate_fits_level = lambda r: True
+    def rate_fits_level(r, level):
+        if level == 1:
+            return r == 5
+        elif level == 2:
+            return (r == 5) or (r == 4)
+        elif level == 3:
+            return (r == 4) or (r == 3)
+        elif level == 4:
+            return (r == 2) or (r == 1)
+        else:
+            return True
 
     wr = load_w_ratings()
-    result = [w for w, r in wr.items() if rate_fits_level(r)]
+    result = [w for w, r in wr.items() if rate_fits_level(r, n)]
     return result
 
 
