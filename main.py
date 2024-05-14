@@ -58,8 +58,8 @@ def load_w_ratings():
             s = f.readline().strip()
             if s == '':
                 break
-            key, value = s.split(", ")
-            w_rating[key] = int(value)
+            word, rate = s.split(", ")
+            w_rating[word] = int(rate)
         return w_rating
 
 
@@ -128,7 +128,7 @@ def get_number(prompt, default=None):
     return default
 
 
-def load_words_by_level(n):
+def load_words_by_level(lvl):
     def rate_fits_level(r, level):
         if level == 1:
             return r == 5
@@ -142,7 +142,7 @@ def load_words_by_level(n):
             return True
 
     wr = load_w_ratings()
-    result = [w for w, r in wr.items() if rate_fits_level(r, n)]
+    result = [w for w, r in wr.items() if rate_fits_level(r, lvl)]
     return result
 
 
@@ -212,6 +212,8 @@ def game_check_attempt(game_info):
 
     w = game_info["user_word"]
     s = game_info["secret_word"]
+
+    # check for exact letter guess (letter and pos)
     w_pos = -1
     for w_letter in w:
         w_pos += 1
@@ -219,6 +221,8 @@ def game_check_attempt(game_info):
             result[w_pos] = 2       # 2 = letter and pos hit
             s = replace_char(s, w_pos, '_')      # replace guessed letter, so it can't be hit twice
             hint_include_letters.add(w_letter)
+
+    # check for close letter guess (letter only)
     w_pos = -1
     for w_letter in w:
         w_pos += 1
