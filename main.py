@@ -2,12 +2,13 @@ from random import randint
 
 
 def load_words_by_len(fname, word_length, shuffled=False):
+
     def read_nearest_valid_word(f):
         while True:
             w = f.readline().strip()
-            if w == '':                 # end of file
+            if w == '':  # end of file
                 return None
-            if len(w) == word_length:   # valid word found
+            if len(w) == word_length:  # valid word found
                 return w
 
     def make_random_offset(f):
@@ -23,7 +24,8 @@ def load_words_by_len(fname, word_length, shuffled=False):
     def count_lines_in_file():
         n = 0
         with (open(fname, 'r', encoding='utf-8') as f):
-            while f.readline() != '': n += 1
+            while f.readline() != '':
+                n += 1
         return n
 
     if shuffled:
@@ -71,7 +73,9 @@ def save_w_ratings(w_rating):
 
 def load_words_to_be_rated(rate_dict, rewise_rating=-1):
     if rewise_rating == -1:
-        for w in load_words_by_len("russian_nouns.txt", word_length, shuffled=True):
+        for w in load_words_by_len("russian_nouns.txt",
+                                   word_length,
+                                   shuffled=True):
             if w not in rate_dict:
                 yield w
     else:
@@ -128,6 +132,7 @@ def get_number(prompt, default=None):
 
 
 def load_words_by_level(lvl):
+
     def rate_fits_level(r, level):
         if level == 1:
             return r == 5
@@ -149,7 +154,8 @@ def new_game(level):
     print("Началась новая игра. Вводите слова и следуйте подсказкам")
     word_list = load_words_by_level(level)
     return {
-        "secret_word": word_list[randint(0, len(word_list)-1)],
+        "secret_word": word_list[randint(0,
+                                         len(word_list) - 1)],
         "attempt": 0
     }
 
@@ -178,7 +184,8 @@ def game_show_hints(game_info):
         if len(hint_inc) > 0:
             print("\tВключите в Ваше слово буквы:", ' '.join(hint_inc).strip())
         if len(hint_exc) > 0:
-            print("\tЭтих букв точно нет в загаданном слове:", ' '.join(hint_exc).strip())
+            print("\tЭтих букв точно нет в загаданном слове:",
+                  ' '.join(hint_exc).strip())
 
 
 def game_make_attempt(game_info):
@@ -188,7 +195,12 @@ def game_make_attempt(game_info):
 
     game_show_hints(game_info)
     while True:
-        user_word = input()
+        try:
+            user_word = input()
+        except UnicodeDecodeError:
+            print("В Ваш ввод попали нечитаемые символы. Попробуйте еще")
+            continue
+
         if user_word == '':
             return end_game(game_info)
         if word_is_valid(user_word):
@@ -199,6 +211,7 @@ def game_make_attempt(game_info):
 
 
 def game_check_attempt(game_info):
+
     def replace_char(s, pos, char):
         s = list(s)
         s[pos] = char
@@ -217,8 +230,10 @@ def game_check_attempt(game_info):
     for w_letter in w:
         w_pos += 1
         if w_letter == s[w_pos]:
-            result[w_pos] = 2       # 2 = letter and pos hit
-            s = replace_char(s, w_pos, '_')      # replace guessed letter, so it can't be hit twice
+            result[w_pos] = 2  # 2 = letter and pos hit
+            s = replace_char(
+                s, w_pos,
+                '_')  # replace guessed letter, so it can't be hit twice
             hint_include_letters.add(w_letter)
 
     # check for close letter guess (letter only)
@@ -229,8 +244,10 @@ def game_check_attempt(game_info):
             continue
         s_pos = s.find(w_letter)
         if s_pos >= 0:
-            result[w_pos] = 1       # 1 = letter hit
-            s = replace_char(s, s_pos, '_')      # replace guessed letter, so it can't be hit twice
+            result[w_pos] = 1  # 1 = letter hit
+            s = replace_char(
+                s, s_pos,
+                '_')  # replace guessed letter, so it can't be hit twice
             hint_include_letters.add(w_letter)
         else:
             hint_exclude_letters.add(w_letter)
@@ -282,7 +299,9 @@ def main():
 
     print("\t\t-= ВОРДЛИ =-")
     print()
-    print(f"Угадайте загаданное слово из {word_length} букв за {max_attempt} попыток")
+    print(
+        f"Угадайте загаданное слово из {word_length} букв за {max_attempt} попыток"
+    )
     print()
     while not terminate:
         print("Выберите сложность:")
