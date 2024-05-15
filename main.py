@@ -81,16 +81,15 @@ def load_words_to_be_rated(rate_dict, rewise_rating=-1):
 
 
 def rate_word(w_rating, w):
-    max_rating = 6
-    r = w_rating.get(w, -1)
-    print(f"{w}. Rating: {r}. ", end='')
-    try:
-        new_r = int(input("Rate this word (0-5, ENTER to stop): "))
-    except ValueError:
-        return
+    max_rating = 5
+    old_r = w_rating.get(w, -1)
+    print(f"{w}. Rating: {old_r}. ", end='')
+    new_r = get_number("Rate this word (0-5, ENTER to stop): ")
+    if new_r is None:
+        return None
     if new_r not in range(0, max_rating + 1):
         print("Rate hasn't been accepted!")
-        return r
+        return old_r
     return new_r
 
 
@@ -270,7 +269,7 @@ def end_game(game_info, event=''):
         print("СУПЕР! Вы смогли угадать слово!\n")
         print("Использовано попыток :", game_info["attempt"])
 
-    print(f"Было загадано слово: \"{game_info["secret_word"]}\"")
+    print(f'Было загадано слово: \"{game_info["secret_word"]}\"')
 
     answer = input("Хотите начать заново? (введите - \"да\")").lower()
     if answer == "да" or answer == "lf":
