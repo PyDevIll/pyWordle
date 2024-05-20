@@ -19,6 +19,15 @@ russian_nouns_txt = [
     "идеал"
 ]
 
+words_rated_txt = {
+    "шпала": 0,
+    "покой": 1,
+    "скетч": 2,
+    "десна": 3,
+    "бухта": 4,
+    "обрыв": 5,
+    "олово": 0
+}
 
 def fake__load_words_by_len(fname, word_length, shuffled=False):
     # generator
@@ -28,20 +37,12 @@ def fake__load_words_by_len(fname, word_length, shuffled=False):
 
 
 def fake__load_w_ratings():
-    w_rating = {}
-    r = 0
-    for w in fake__load_words_by_len('', main.word_length):
-        w_rating[w] = r % 6     # make up dict {some word: rate 0 to 5}
-        r += 1
-        # stop here so we have at least 1 word with each rate and some words left unrated
-        if r >= 6:
-            break
-
-    return w_rating
+    return words_rated_txt
 
 
 def fake__save_w_ratings(w_rating):
-    ...
+    global words_rated_txt
+    words_rated_txt = w_rating
 
 
 # stubs for functions using file IO
@@ -104,7 +105,98 @@ def test_rate_word():
     
     main.input = input
     
-# def rate_wordlist():
+
+def test_rate_wordlist():
+    def fake_input(prompt):
+        if prompt == ': ':
+            return input_case["rating_to_load"]
+        if prompt == 'Rate this word (0-5, ENTER to stop): ':
+            return input_case["rating_to_set"]
+            
+    main.input = fake_input
+
+    input_cases = [
+        {"rating_to_load": 0, "rating_to_set": 1},
+        {"rating_to_load": 1, "rating_to_set": 2},
+        {"rating_to_load": 2, "rating_to_set": 3},
+        {"rating_to_load": 3, "rating_to_set": 4},
+        {"rating_to_load": 4, "rating_to_set": 5},
+        {"rating_to_load": 5, "rating_to_set": 0},
+    ]
+
+    input_case = input_cases[0]
+    main.rate_wordlist()
+    assert words_rated_txt == {
+        "шпала": 1,
+        "покой": 1,
+        "скетч": 2,
+        "десна": 3,
+        "бухта": 4,
+        "обрыв": 5,
+        "олово": 1
+    }
+    
+    input_case = input_cases[1]
+    main.rate_wordlist()
+    assert words_rated_txt == {
+        "шпала": 2,
+        "покой": 2,
+        "скетч": 2,
+        "десна": 3,
+        "бухта": 4,
+        "обрыв": 5,
+        "олово": 2
+    }
+    
+    input_case = input_cases[2]
+    main.rate_wordlist()
+    assert words_rated_txt == {
+        "шпала": 3,
+        "покой": 3,
+        "скетч": 3,
+        "десна": 3,
+        "бухта": 4,
+        "обрыв": 5,
+        "олово": 3
+    }
+    
+    input_case = input_cases[3]
+    main.rate_wordlist()
+    assert words_rated_txt == {
+        "шпала": 4,
+        "покой": 4,
+        "скетч": 4,
+        "десна": 4,
+        "бухта": 4,
+        "обрыв": 5,
+        "олово": 4
+    }
+    
+    input_case = input_cases[4]
+    main.rate_wordlist()
+    assert words_rated_txt == {
+        "шпала": 5,
+        "покой": 5,
+        "скетч": 5,
+        "десна": 5,
+        "бухта": 5,
+        "обрыв": 5,
+        "олово": 5
+    }
+    
+    input_case = input_cases[5]
+    main.rate_wordlist()
+    assert words_rated_txt == {
+        "шпала": 0,
+        "покой": 0,
+        "скетч": 0,
+        "десна": 0,
+        "бухта": 0,
+        "обрыв": 0,
+        "олово": 0
+    }
+
+    main.input = input
 
 #     print("Word rating mode activated.")
 #     print("""

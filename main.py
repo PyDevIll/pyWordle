@@ -118,7 +118,7 @@ def rate_wordlist():
         save_w_ratings(w_rating)
 
     print()
-
+    
 
 def get_number(prompt, default=None):
     # returns integer, or default otherwise
