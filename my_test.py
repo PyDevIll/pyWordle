@@ -198,37 +198,71 @@ def test_rate_wordlist():
 
     main.input = input
 
-#     print("Word rating mode activated.")
-#     print("""
-#         Enter word rating number (0-5) to rewise already rated words
-#         or press ENTER to rate new words
-#     """)
-#     rewise_rating = get_number(': ', -1)
 
-#     w_rating = load_w_ratings()
-#     if w_rating is None:
-#         return
-#     print("Rated", len(w_rating.keys()), "words.")
-#     for w in load_words_to_be_rated(w_rating, rewise_rating):
-#         new_r = rate_word(w_rating, w)
-#         if new_r is None:
-#             break
-#         w_rating[w] = new_r
-#         save_w_ratings(w_rating)
+def test_get_number():
+    main.input = lambda _: input_case["num"]
 
-#     print()
+    input_cases = [
+        {"num": "", "will_succeed": False},
+        {"num": "-1", "will_succeed": True},
+        {"num": "-0", "will_succeed": True},
+        {"num": "000_000", "will_succeed": True},
+        {"num": "0_0", "will_succeed": True},
+        {"num": "-1_", "will_succeed": False},
+        {"num": "0", "will_succeed": True},
+        {"num": "$1", "will_succeed": False},
+        {"num": "\n", "will_succeed": False},
+        {"num": "1", "will_succeed": True},
+        {"num": "1.0", "will_succeed": False},
+        {"num": "1.0.0", "will_succeed": False}        
+    ]
 
+    for input_case in input_cases:
+        assert (type(main.get_number("")) == int) == input_case["will_succeed"]
+        assert type(main.get_number("", 0)) == int
 
-# def get_number(prompt, default=None):
-#     # returns integer, or default otherwise
-#     try:
-#         return int(input(prompt))
-#     except ValueError:
-#         # Если значение по умолчанию не предусмотрено, значит ошибка ввода
-#         if default is None:
-#             print(" -! Ожидался ввод числа. Операция прервана !- ")
-#     return default
+    main.input = input
+    
 
+def test_load_words_by_level():
+    global words_rated_txt
+    words_rated_txt = {
+        "шпала": 0,
+        "хряст": 1,
+        "ворог": 2,
+        "фьорд": 3,
+        "жатва": 4,
+        "носач": 3,
+        "олово": 5
+    }
+    level_normal = 1
+    level_hard = 2
+    level_nightmare = 3
+    level_horror = 4
+
+    words_returned = main.load_words_by_level(level_normal)
+    assert set(words_returned) == {"олово"}                      # normal: ratings 5
+    
+    words_returned = main.load_words_by_level(level_hard)
+    assert set(words_returned) == {"олово", "жатва"}             # hard  : ratings 5 & 4
+    
+    words_returned = main.load_words_by_level(level_nightmare) 
+    assert set(words_returned) == {"фьорд", "жатва", "носач"}    # nightmare: ratings 4 & 3
+    
+    words_returned = main.load_words_by_level(level_horror)
+    assert set(words_returned) == {"хряст", "ворог"}             # horror: ratings 2 & 1
+
+    words_returned = main.load_words_by_level(0)
+    assert len(words_returned) == 0
+
+    words_returned = main.load_words_by_level(-1)
+    assert len(words_returned) == 0
+
+    words_returned = main.load_words_by_level(5)
+    assert len(words_returned) == 0
+
+    words_returned = main.load_words_by_level(999)
+    assert len(words_returned) == 0
 
 # def load_words_by_level(lvl):
 #     def rate_fits_level(r, level):

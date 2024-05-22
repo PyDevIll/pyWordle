@@ -143,7 +143,7 @@ def load_words_by_level(lvl):
         elif level == 4:
             return (r == 2) or (r == 1)
         else:
-            return True
+            return False
 
     wr = load_w_ratings()
     result = [w for w, r in wr.items() if rate_fits_level(r, lvl)]
