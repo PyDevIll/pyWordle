@@ -14,9 +14,15 @@ russian_nouns_txt = [
     "олово",
     "приём",
     "отдых",
-    "кольцевание"
+    "кольцевание",
     "ручей",
-    "идеал"
+    "идеал",
+    "хряст",
+    "кино",
+    "ворог",
+    "фьорд",
+    "жатва",
+    "носач",
 ]
 
 words_rated_txt = {
@@ -280,32 +286,38 @@ def test_new_game():
         assert game_info is None
 
 
-# def word_is_valid(w):
-#     if len(w) != word_length:
-#         return False
+def test_word_is_valid():
+    main.word_length = 5
+    assert not main.word_is_valid("округлость")
+    assert not main.word_is_valid("")
+    assert not main.word_is_valid("кино")
+    assert not main.word_is_valid("сампридумал")
+    assert not main.word_is_valid("абвгд")
+    assert not main.word_is_valid("ол0во")
+    assert not main.word_is_valid("false")
+    
+    assert main.word_is_valid("бухта")
+    assert main.word_is_valid("шпала")
+    assert main.word_is_valid("ручей")
+    assert main.word_is_valid("идеал")
+    assert main.word_is_valid("прием")    # е <=> ё
 
-#     cyr_letters = "абвгдеёзжийклмнопрстуфхцчшщъыьэюя"
-#     if not all(w_letter in cyr_letters for w_letter in w):
-#         return False
 
-#     w = w.replace("ё", "е")
-#     # check if w in dictionary
-#     for w_dict in load_words_by_len("russian_nouns.txt", word_length):
-#         if w_dict.replace("ё", "е") == w:
-#             return True
-#     return False
-
-
-# def game_show_hints(game_info):
-#     hint_inc = game_info.get("hint_inc", '')
-#     hint_exc = game_info.get("hint_exc", '')
-#     if len(hint_inc) > 0 or len(hint_exc) > 0:
-#         print("Подсказка: ")
-#         if len(hint_inc) > 0:
-#             print("\tВключите в Ваше слово буквы:", ' '.join(hint_inc).strip())
-#         if len(hint_exc) > 0:
-#             print("\tЭтих букв точно нет в загаданном слове:", ' '.join(hint_exc).strip())
-
+def test_game_show_hints():
+    game_info = {
+        "hint_inc": {"й", "щ"},
+        "hint_exc": {"ь", "э"}
+    }
+    main.game_show_hints(game_info)
+    assert True    # no crash
+    
+    game_info = {
+        "hint_inc": {},
+        "hint_exc": None
+    }
+    main.game_show_hints(game_info)
+    assert True    # no crash
+    
 
 # def game_make_attempt(game_info):
 #     if game_info["attempt"] >= max_attempt:

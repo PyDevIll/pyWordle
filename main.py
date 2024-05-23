@@ -176,6 +176,9 @@ def word_is_valid(w):
 def game_show_hints(game_info):
     hint_inc = game_info.get("hint_inc", '')
     hint_exc = game_info.get("hint_exc", '')
+    if (hint_inc is None) or (hint_exc is None):
+        return    # нет подсказок
+        
     if len(hint_inc) > 0 or len(hint_exc) > 0:
         print("Подсказка: ")
         if len(hint_inc) > 0:
