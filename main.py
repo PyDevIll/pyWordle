@@ -2,7 +2,6 @@ from random import randint
 
 
 def load_words_by_len(fname, word_length, shuffled=False):
-
     def read_nearest_valid_word(f):
         while True:
             w = f.readline().strip()
@@ -73,9 +72,7 @@ def save_w_ratings(w_rating):
 
 def load_words_to_be_rated(rate_dict, rewise_rating=-1):
     if rewise_rating == -1:
-        for w in load_words_by_len("russian_nouns.txt",
-                                   word_length,
-                                   shuffled=True):
+        for w in load_words_by_len("russian_nouns.txt", word_length, shuffled=True):
             if w not in rate_dict:
                 yield w
     else:
@@ -98,7 +95,6 @@ def rate_word(w_rating, w):
 
 
 def rate_wordlist():
-
     print("Word rating mode activated.")
     print("""
         Enter word rating number (0-5) to rewise already rated words
@@ -132,7 +128,6 @@ def get_number(prompt, default=None):
 
 
 def load_words_by_level(lvl):
-
     def rate_fits_level(r, level):
         if level == 1:
             return r == 5
@@ -153,12 +148,14 @@ def load_words_by_level(lvl):
 def new_game(level):
     print("Началась новая игра. Вводите слова и следуйте подсказкам")
     word_list = load_words_by_level(level)
-    return {
-        "secret_word": word_list[randint(0,
-                                         len(word_list) - 1)],
-        "attempt": 0
-    }
-
+    if len(word_list) > 0:
+        return {
+            "secret_word": word_list[randint(0, len(word_list) - 1)],
+            "attempt": 0
+        }
+    else:
+        return None
+    
 
 def word_is_valid(w):
     if len(w) != word_length:
@@ -184,8 +181,7 @@ def game_show_hints(game_info):
         if len(hint_inc) > 0:
             print("\tВключите в Ваше слово буквы:", ' '.join(hint_inc).strip())
         if len(hint_exc) > 0:
-            print("\tЭтих букв точно нет в загаданном слове:",
-                  ' '.join(hint_exc).strip())
+            print("\tЭтих букв точно нет в загаданном слове:", ' '.join(hint_exc).strip())
 
 
 def game_make_attempt(game_info):
@@ -211,7 +207,6 @@ def game_make_attempt(game_info):
 
 
 def game_check_attempt(game_info):
-
     def replace_char(s, pos, char):
         s = list(s)
         s[pos] = char
@@ -273,7 +268,6 @@ def game_draw_result(game_info):
 
 
 def end_game(game_info, event=''):
-
     if event == '':
         global terminate
         terminate = True
@@ -296,12 +290,9 @@ def end_game(game_info, event=''):
 
 
 def main():
-
     print("\t\t-= ВОРДЛИ =-")
     print()
-    print(
-        f"Угадайте загаданное слово из {word_length} букв за {max_attempt} попыток"
-    )
+    print(f"Угадайте загаданное слово из {word_length} букв за {max_attempt} попыток")
     print()
     while not terminate:
         print("Выберите сложность:")
@@ -317,6 +308,10 @@ def main():
             continue
 
         game_info = new_game(select)
+        if game_info is None:
+            print("Не удалось загадать слово для выбранного уровня сложности (")
+            exit()
+            
         while not terminate:
             if not game_make_attempt(game_info):
                 break

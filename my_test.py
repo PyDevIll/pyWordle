@@ -29,6 +29,7 @@ words_rated_txt = {
     "олово": 0
 }
 
+
 def fake__load_words_by_len(fname, word_length, shuffled=False):
     # generator
     for w in russian_nouns_txt:
@@ -195,7 +196,6 @@ def test_rate_wordlist():
         "обрыв": 0,
         "олово": 0
     }
-
     main.input = input
 
 
@@ -264,31 +264,20 @@ def test_load_words_by_level():
     words_returned = main.load_words_by_level(999)
     assert len(words_returned) == 0
 
-# def load_words_by_level(lvl):
-#     def rate_fits_level(r, level):
-#         if level == 1:
-#             return r == 5
-#         elif level == 2:
-#             return (r == 5) or (r == 4)
-#         elif level == 3:
-#             return (r == 4) or (r == 3)
-#         elif level == 4:
-#             return (r == 2) or (r == 1)
-#         else:
-#             return True
 
-#     wr = load_w_ratings()
-#     result = [w for w, r in wr.items() if rate_fits_level(r, lvl)]
-#     return result
+def test_new_game():
+    test_levels_success = [4, 3, 2, 1]
+    for level in test_levels_success:
+        game_info = main.new_game(level)
+        assert game_info["attempt"] == 0
+        assert len(game_info["secret_word"]) == main.word_length
+        assert game_info["secret_word"] in words_rated_txt
+        assert game_info["secret_word"] in main.load_words_by_level(level)
 
-
-# def new_game(level):
-#     print("Началась новая игра. Вводите слова и следуйте подсказкам")
-#     word_list = load_words_by_level(level)
-#     return {
-#         "secret_word": word_list[randint(0, len(word_list)-1)],
-#         "attempt": 0
-#     }
+    test_levels_fail = [0, 5, -1, 999]
+    for level in test_levels_fail:
+        game_info = main.new_game(level)
+        assert game_info is None
 
 
 # def word_is_valid(w):
