@@ -189,10 +189,11 @@ def game_show_hints(game_info):
 
 def game_make_attempt(game_info):
     if game_info["attempt"] >= max_attempt:
-        return end_game(game_info, event='noattempts')
+        return 'noattempts'
     game_info["attempt"] += 1
 
     game_show_hints(game_info)
+    user_word = ''
     while True:
         try:
             user_word = input()
@@ -201,12 +202,13 @@ def game_make_attempt(game_info):
             continue
 
         if user_word == '':
-            return end_game(game_info)
+            return 'quit'
         if word_is_valid(user_word):
             break
         print("Кажется это слово не подходит. Попробуйте еще раз")
+
     game_info["user_word"] = user_word.lower()
-    return True
+    return ''
 
 
 def game_check_attempt(game_info):
@@ -270,12 +272,13 @@ def game_draw_result(game_info):
     print()
 
 
-def end_game(game_info, event=''):
-    if event == '':
+def end_game(game_info, event='quit'):
+
+    if event == 'quit':
         global terminate
         terminate = True
         print("Игра окончена")
-        return False
+        return
 
     if event == 'noattempts':
         print("К сожалению Вы использовали все попытки (\n")
@@ -287,7 +290,7 @@ def end_game(game_info, event=''):
 
     answer = input("Хотите начать заново? (введите - \"да\")").lower()
     if answer == "да" or answer == "lf":
-        return False
+        return
     else:
         end_game(game_info)
 
@@ -316,8 +319,9 @@ def main():
             exit()
             
         while not terminate:
-            if not game_make_attempt(game_info):
-                break
+            outcome_msg = game_make_attempt(game_info)
+            if outcome_msg != '':
+                end_game(game_info, outcome_msg)
             if not game_check_attempt(game_info):
                 break
             game_draw_result(game_info)

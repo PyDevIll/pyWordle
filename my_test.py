@@ -88,14 +88,14 @@ def test_rate_word():
     main.input = lambda _: input_case['value']
 
     input_cases = [
-        {'value': '-1', 'changed': False}, # rate_word should return unchanged rate
+        {'value': '-1', 'changed': False},      # rate_word should return unchanged rate
         {'value': '-2', 'changed': False},
-        {'value': '0', 'changed': True, 'result': 0}, # rate_word should return new rate
+        {'value': '0', 'changed': True, 'result': 0},   # rate_word should return new rate
         {'value': '1', 'changed': True, 'result': 1},
         {'value': '5', 'changed': True, 'result': 5},
         {'value': '6', 'changed': False},
         {'value': '100', 'changed': False},
-        {'value': '', 'changed': True, 'result': None}, # rate_word should return None
+        {'value': '', 'changed': True, 'result': None},     # rate_word should return None
         {'value': 'one', 'changed': True, 'result': None}
     ]
 
@@ -318,6 +318,8 @@ def test_game_show_hints():
     main.game_show_hints(game_info)
     assert True    # no crash
     
+
+def test_game_make_attempt():
 
 # def game_make_attempt(game_info):
 #     if game_info["attempt"] >= max_attempt:
