@@ -103,8 +103,6 @@ def rate_wordlist():
     rewise_rating = get_number(': ', -1)
 
     w_rating = load_w_ratings()
-    if w_rating is None:
-        return
     print("Rated", len(w_rating.keys()), "words.")
     for w in load_words_to_be_rated(w_rating, rewise_rating):
         new_r = rate_word(w_rating, w)
@@ -149,8 +147,9 @@ def new_game(level):
     print("Началась новая игра. Вводите слова и следуйте подсказкам")
     word_list = load_words_by_level(level)
     if len(word_list) > 0:
+        new_word = word_list[randint(0, len(word_list) - 1)]
         return {
-            "secret_word": word_list[randint(0, len(word_list) - 1)],
+            "secret_word": new_word,
             "attempt": 0
         }
     else:
@@ -188,27 +187,21 @@ def game_show_hints(game_info):
 
 
 def game_make_attempt(game_info):
-    if game_info["attempt"] >= max_attempt:
+    if game_info["attempt"] + 1 > max_attempt:
         return 'noattempts'
-    game_info["attempt"] += 1
 
     game_show_hints(game_info)
-    user_word = ''
-    while True:
-        try:
-            user_word = input()
-        except UnicodeDecodeError:
-            print("В Ваш ввод попали нечитаемые символы. Попробуйте еще")
-            continue
+    user_word = input()
 
-        if user_word == '':
-            return 'quit'
-        if word_is_valid(user_word):
-            break
+    if user_word == '':
+        return 'quit'
+    if not word_is_valid(user_word):
         print("Кажется это слово не подходит. Попробуйте еще раз")
+        return 'tryagain'
 
+    game_info["attempt"] += 1
     game_info["user_word"] = user_word.lower()
-    return ''
+    return 'ok'
 
 
 def game_check_attempt(game_info):
@@ -222,8 +215,8 @@ def game_check_attempt(game_info):
     hint_include_letters = game_info.get("hint_inc", set())
     hint_exclude_letters = game_info.get("hint_exc", set())
 
-    w = game_info["user_word"]
-    s = game_info["secret_word"]
+    w = game_info["user_word"].replace('ё', 'е')
+    s = game_info["secret_word"].replace('ё', 'е')
 
     # check for exact letter guess (letter and pos)
     w_pos = -1
@@ -231,9 +224,7 @@ def game_check_attempt(game_info):
         w_pos += 1
         if w_letter == s[w_pos]:
             result[w_pos] = 2  # 2 = letter and pos hit
-            s = replace_char(
-                s, w_pos,
-                '_')  # replace guessed letter, so it can't be hit twice
+            s = replace_char(s, w_pos, '_')  # replace guessed letter, so it can't be hit twice
             hint_include_letters.add(w_letter)
 
     # check for close letter guess (letter only)
@@ -245,20 +236,18 @@ def game_check_attempt(game_info):
         s_pos = s.find(w_letter)
         if s_pos >= 0:
             result[w_pos] = 1  # 1 = letter hit
-            s = replace_char(
-                s, s_pos,
-                '_')  # replace guessed letter, so it can't be hit twice
+            s = replace_char(s, s_pos, '_')  # replace guessed letter, so it can't be hit twice
             hint_include_letters.add(w_letter)
         else:
             hint_exclude_letters.add(w_letter)
 
     if sum(result) == word_length * 2:
-        return end_game(game_info, event='bingo')
+        return True
 
     game_info["hint_exc"] = (hint_exclude_letters - hint_include_letters)
     game_info["hint_inc"] = hint_include_letters
     game_info["result"] = result
-    return True
+    return False
 
 
 def game_draw_result(game_info):
@@ -273,12 +262,11 @@ def game_draw_result(game_info):
 
 
 def end_game(game_info, event='quit'):
-
     if event == 'quit':
         global terminate
         terminate = True
         print("Игра окончена")
-        return
+        return True     # game actually ends
 
     if event == 'noattempts':
         print("К сожалению Вы использовали все попытки (\n")
@@ -290,7 +278,7 @@ def end_game(game_info, event='quit'):
 
     answer = input("Хотите начать заново? (введите - \"да\")").lower()
     if answer == "да" or answer == "lf":
-        return
+        return False    # game continues
     else:
         end_game(game_info)
 
@@ -318,13 +306,21 @@ def main():
             print("Не удалось загадать слово для выбранного уровня сложности (")
             exit()
             
-        while not terminate:
+        while True:
             outcome_msg = game_make_attempt(game_info)
-            if outcome_msg != '':
+            if outcome_msg == 'tryagain':
+                continue
+            elif outcome_msg != 'ok':
                 end_game(game_info, outcome_msg)
-            if not game_check_attempt(game_info):
                 break
+
+            victory = game_check_attempt(game_info)
+            if victory:
+                end_game(game_info, 'bingo')
+                break
+
             game_draw_result(game_info)
+
 
     print("До свидания!")
 

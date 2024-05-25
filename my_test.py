@@ -123,12 +123,12 @@ def test_rate_wordlist():
     main.input = fake_input
 
     input_cases = [
-        {"rating_to_load": 0, "rating_to_set": 1},
-        {"rating_to_load": 1, "rating_to_set": 2},
-        {"rating_to_load": 2, "rating_to_set": 3},
-        {"rating_to_load": 3, "rating_to_set": 4},
-        {"rating_to_load": 4, "rating_to_set": 5},
-        {"rating_to_load": 5, "rating_to_set": 0},
+        {"rating_to_load": '0', "rating_to_set": '1'},
+        {"rating_to_load": '1', "rating_to_set": '2'},
+        {"rating_to_load": '2', "rating_to_set": '3'},
+        {"rating_to_load": '3', "rating_to_set": '4'},
+        {"rating_to_load": '4', "rating_to_set": '5'},
+        {"rating_to_load": '5', "rating_to_set": ''},
     ]
 
     input_case = input_cases[0]
@@ -194,13 +194,13 @@ def test_rate_wordlist():
     input_case = input_cases[5]
     main.rate_wordlist()
     assert words_rated_txt == {
-        "шпала": 0,
-        "покой": 0,
-        "скетч": 0,
-        "десна": 0,
-        "бухта": 0,
-        "обрыв": 0,
-        "олово": 0
+        "шпала": 5,
+        "покой": 5,
+        "скетч": 5,
+        "десна": 5,
+        "бухта": 5,
+        "обрыв": 5,
+        "олово": 5
     }
     main.input = input
 
@@ -320,68 +320,57 @@ def test_game_show_hints():
     
 
 def test_game_make_attempt():
+    main.input = lambda: input_case["user_input"]
 
-# def game_make_attempt(game_info):
-#     if game_info["attempt"] >= max_attempt:
-#         return end_game(game_info, event='noattempts')
-#     game_info["attempt"] += 1
+    input_cases = [
+        {"user_input": '', "outcome_msg": 'quit'},
+        {"user_input": 'скетч', "outcome_msg": 'ok'},           # word that is in dictionary
+        {"user_input": 'абоба', "outcome_msg": 'tryagain'},     # is not in dictionary
+        {"user_input": 'бухта', "outcome_msg": 'ok'},
+        {"user_input": 'десна', "outcome_msg": 'noattempts'}
+    ]
 
-#     game_show_hints(game_info)
-#     while True:
-#         user_word = input()
-#         if user_word == '':
-#             return end_game(game_info)
-#         if word_is_valid(user_word):
-#             break
-#         print("Кажется это слово не подходит. Попробуйте еще раз")
-#     game_info["user_word"] = user_word.lower()
-#     return True
+    game_info = {
+        "attempt": 4,
+    }
+    main.max_attempt = 6
+
+    for input_case in input_cases:
+        game_info["user_word"] = ''         # previously unset
+        outcome_msg = main.game_make_attempt(game_info)
+        assert outcome_msg == input_case["outcome_msg"]
+        if outcome_msg == 'ok':
+            assert game_info["user_word"] == input_case["user_input"]   # becomes set
+        else:
+            assert game_info["user_word"] == ''     # stays unset
+
+    main.input = input
 
 
-# def game_check_attempt(game_info):
-#     def replace_char(s, pos, char):
-#         s = list(s)
-#         s[pos] = char
-#         return ''.join(s)
+def test_game_check_attempt():
+    game_info = {
+        "user_word": "ручей",
+        "secret_word": "скетч"
+    }
+    victory = main.game_check_attempt(game_info)
+    assert not victory
+    assert game_info["result"] == [0, 0, 1, 1, 0]
+    assert game_info["hint_inc"] == {'е', 'ч'}
+    assert game_info["hint_exc"] == {'р', 'у', 'й'}
 
-#     result = [0] * word_length
+    game_info["user_word"] = "отчёт"
+    victory = main.game_check_attempt(game_info)
+    assert not victory
+    assert game_info["result"] == [0, 1, 1, 1, 0]
+    assert game_info["hint_inc"] == {'е', 'ч', 'т'}
+    assert game_info["hint_exc"] == {'р', 'у', 'й', 'о'}
 
-#     hint_include_letters = game_info.get("hint_inc", set())
-#     hint_exclude_letters = game_info.get("hint_exc", set())
-
-#     w = game_info["user_word"]
-#     s = game_info["secret_word"]
-
-#     # check for exact letter guess (letter and pos)
-#     w_pos = -1
-#     for w_letter in w:
-#         w_pos += 1
-#         if w_letter == s[w_pos]:
-#             result[w_pos] = 2       # 2 = letter and pos hit
-#             s = replace_char(s, w_pos, '_')      # replace guessed letter, so it can't be hit twice
-#             hint_include_letters.add(w_letter)
-
-#     # check for close letter guess (letter only)
-#     w_pos = -1
-#     for w_letter in w:
-#         w_pos += 1
-#         if result[w_pos] != 0:
-#             continue
-#         s_pos = s.find(w_letter)
-#         if s_pos >= 0:
-#             result[w_pos] = 1       # 1 = letter hit
-#             s = replace_char(s, s_pos, '_')      # replace guessed letter, so it can't be hit twice
-#             hint_include_letters.add(w_letter)
-#         else:
-#             hint_exclude_letters.add(w_letter)
-
-#     if sum(result) == word_length * 2:
-#         return end_game(game_info, event='bingo')
-
-#     game_info["hint_exc"] = (hint_exclude_letters - hint_include_letters)
-#     game_info["hint_inc"] = hint_include_letters
-#     game_info["result"] = result
-#     return True
+    game_info = {
+        "user_word": "прием",
+        "secret_word": "приём"
+    }
+    victory = main.game_check_attempt(game_info)
+    assert victory
 
 
 # def game_draw_result(game_info):
