@@ -191,7 +191,8 @@ def game_make_attempt(game_info):
         return 'noattempts'
 
     game_show_hints(game_info)
-    user_word = input()
+    print()
+    user_word = input("Ваше слово: ")
 
     if user_word == '':
         return 'quit'
@@ -283,6 +284,8 @@ def end_game(game_info, event='quit'):
 
 
 def main():
+    global game_info
+
     print("\t\t-= ВОРДЛИ =-")
     print()
     print(f"Угадайте загаданное слово из {word_length} букв за {max_attempt} попыток")
@@ -321,13 +324,13 @@ def main():
             print(game_draw_result(game_info))
             print()
 
-
     print("До свидания!")
 
 
 max_attempt = 6
 word_length = 5
 terminate = False
+game_info = {}
 
 if __name__ == "__main__":
     main()

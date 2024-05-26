@@ -84,7 +84,7 @@ def test_load_words_to_be_rated():
 
 
 def test_rate_word():
-    #rate_word returns new rating after user input
+    # rate_word returns new rating after user input
     main.input = lambda _: input_case['value']
 
     input_cases = [
@@ -320,7 +320,7 @@ def test_game_show_hints():
     
 
 def test_game_make_attempt():
-    main.input = lambda: input_case["user_input"]
+    main.input = lambda _: input_case["user_input"]
 
     input_cases = [
         {"user_input": '', "outcome_msg": 'quit'},
@@ -422,4 +422,81 @@ def test_end_game():
     main.input = input
 
 
+scenario_step = -1
+
+
+def test_main():
+    def fake_input(prompt=''):
+        global scenario_step
+        scenario_step += 1
+        return scenario[scenario_step][prompt]
+
+    main.input = fake_input
+    main.randint = lambda a, b: 1       # no random during tests
+
+    global words_rated_txt
+    words_rated_txt = {
+        "шпала": 0,
+        "хряст": 1,
+        "ворог": 2,
+        "фьорд": 3,
+        "жатва": 4,
+        "носач": 3,
+        "олово": 5
+    }
+    global scenario_step
+
+    scenario = [
+        {"Ваш выбор (1-4, ENTER - выход): ": "5"},       # go into rate mode
+        {": ": "0"},                                     # select words with rating 0
+        {"Rate this word (0-5, ENTER to stop): ": "5"},  # change rate to 5
+        {"Ваш выбор (1-4, ENTER - выход): ": ""},        # exit
+    ]
+    scenario_step = -1
+    main.main()
+    assert words_rated_txt["шпала"] == 5
+
+    scenario = [
+        {"Ваш выбор (1-4, ENTER - выход): ": "2"},
+        {"Ваше слово: ": "жатва"},
+        {"Хотите начать заново? (введите - \"да\")": ""}
+    ]
+    scenario_step = -1
+    main.main()
+    assert main.game_info == {
+        "user_word": "жатва",
+        "secret_word": "жатва",
+        "attempt": 1,
+    }
+
+    main.input = input
+
+
+    # while not terminate:
+    #     if (select := get_number("Ваш выбор (1-4, ENTER - выход): ")) is None:
+    #         break
+    #     if select not in range(1, 5):
+    #         rate_wordlist()
+    #         continue
+    #
+    #     game_info = new_game(select)
+    #     if game_info is None:
+    #         print("Не удалось загадать слово для выбранного уровня сложности (")
+    #         exit()
+    #
+    #     while True:
+    #         outcome_msg = game_make_attempt(game_info)
+    #         if outcome_msg == 'tryagain':
+    #             continue
+    #         elif outcome_msg != 'ok':
+    #             end_game(game_info, outcome_msg)
+    #             break
+    #
+    #         victory = game_check_attempt(game_info)
+    #         if victory:
+    #             end_game(game_info, 'bingo')
+    #             break
+    #
+    #         print(game_draw_result(game_info))
+    #         print()
 
