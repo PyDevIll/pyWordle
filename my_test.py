@@ -373,36 +373,53 @@ def test_game_check_attempt():
     assert victory
 
 
-# def game_draw_result(game_info):
-#     result = game_info.get("result", [0] * word_length)
-#     result_sym = '_?!'
-#     result_str = ''
-#     for i in range(word_length):
-#         result_str += result_sym[result[i]]
+def test_game_draw_result():
+    main.word_length = 5
+    game_info = {
+        "result": [1, 0, 0, 2, 0]
+    }
+    assert main.game_draw_result(game_info) == '?__!_'
 
-#     print(result_str)
-#     print()
+    game_info = {}
+    assert main.game_draw_result(game_info) == '_____'
+
+    game_info = {
+        "result": [2, 2, 2, 2, 2]
+    }
+    assert main.game_draw_result(game_info) == '!!!!!'
 
 
-# def end_game(game_info, event=''):
+def test_end_game():
+    game_info = {
+        "attempt": 0,
+        "secret_word": ""
+    }
+    main.terminate = False
+    assert main.end_game(game_info)     # True - game ends
+    assert main.terminate
 
-#     if event == '':
-#         global terminate
-#         terminate = True
-#         print("Игра окончена")
-#         return False
+    assert main.end_game(game_info, 'quit')
+    assert main.terminate
 
-#     if event == 'noattempts':
-#         print("К сожалению Вы использовали все попытки (\n")
-#     if event == 'bingo':
-#         print("СУПЕР! Вы смогли угадать слово!\n")
-#         print("Использовано попыток :", game_info["attempt"])
+    main.input = lambda _: input_case["user_input"]
+    input_cases = [
+        {"user_input": "lf", "result": False},   # False - game continues
+        {"user_input": "да", "result": False},
+        {"user_input": "ДА", "result": False},
+        {"user_input": "", "result": True},
+        {"user_input": "нет", "result": True}
+    ]
+    for input_case in input_cases:
+        main.terminate = False
+        assert main.end_game(game_info, 'bingo') == input_case["result"]
+        assert main.terminate == input_case["result"]
 
-#     print(f"Было загадано слово: \"{game_info["secret_word"]}\"")
+    for input_case in input_cases:
+        main.terminate = False
+        assert main.end_game(game_info, 'noattempts') == input_case["result"]
+        assert main.terminate == input_case["result"]
 
-#     answer = input("Хотите начать заново? (введите - \"да\")").lower()
-#     if answer == "да" or answer == "lf":
-#         return False
-#     else:
-#         end_game(game_info)
+    main.input = input
+
+
 

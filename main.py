@@ -257,8 +257,7 @@ def game_draw_result(game_info):
     for i in range(word_length):
         result_str += result_sym[result[i]]
 
-    print(result_str)
-    print()
+    return result_str
 
 
 def end_game(game_info, event='quit'):
@@ -280,7 +279,7 @@ def end_game(game_info, event='quit'):
     if answer == "да" or answer == "lf":
         return False    # game continues
     else:
-        end_game(game_info)
+        return end_game(game_info)
 
 
 def main():
@@ -319,7 +318,8 @@ def main():
                 end_game(game_info, 'bingo')
                 break
 
-            game_draw_result(game_info)
+            print(game_draw_result(game_info))
+            print()
 
 
     print("До свидания!")
