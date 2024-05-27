@@ -1,4 +1,12 @@
 from random import randint
+from datetime import datetime
+
+
+def log(agent, msg):
+    with open("log.txt", 'a', encoding='utf-8') as flog:
+        dt = datetime.now()
+        log_str = dt.strftime('[%Y-%m-%d %H:%M:%S.%f]') + ' [INFO] ['+agent+']: '+msg
+        flog.write(log_str + '\n')
 
 
 def load_words_by_len(fname, word_length, shuffled=False):
@@ -148,6 +156,8 @@ def new_game(level):
     word_list = load_words_by_level(level)
     if len(word_list) > 0:
         new_word = word_list[randint(0, len(word_list) - 1)]
+        log('System', 'Начата новая игра. Выбранный уровень сложности: '+str(level))
+        log('System', 'Загадано слово "' + new_word + '"')
         return {
             "secret_word": new_word,
             "attempt": 0
@@ -158,10 +168,12 @@ def new_game(level):
 
 def word_is_valid(w):
     if len(w) != word_length:
+        log('System', f'Длина слова отличается от заданной в игре ({word_length})')
         return False
 
     cyr_letters = "абвгдеёзжийклмнопрстуфхцчшщъыьэюя"
     if not all(w_letter in cyr_letters for w_letter in w):
+        log('System', 'Слово содержит некириллические символы')
         return False
 
     w = w.replace("ё", "е")
@@ -169,6 +181,8 @@ def word_is_valid(w):
     for w_dict in load_words_by_len("russian_nouns.txt", word_length):
         if w_dict.replace("ё", "е") == w:
             return True
+
+    log('System', 'Слово не входит в словарь russian_nouns.txt')
     return False
 
 
@@ -190,9 +204,11 @@ def game_make_attempt(game_info):
     if game_info["attempt"] + 1 > max_attempt:
         return 'noattempts'
 
+    log('System', f'Попытка {game_info["attempt"]+1} из {max_attempt}')
     game_show_hints(game_info)
     print()
     user_word = input("Ваше слово: ")
+    log('User', 'Вводит слово "' + user_word + '"')
 
     if user_word == '':
         return 'quit'
@@ -266,17 +282,24 @@ def end_game(game_info, event='quit'):
         global terminate
         terminate = True
         print("Игра окончена")
+        log('System', 'Игрок пожелал покинуть игру. Завершение программы\n')
         return True     # game actually ends
 
     if event == 'noattempts':
         print("К сожалению Вы использовали все попытки (\n")
+        log('System', 'Попытки исчерпаны. Предлагаем начать заново')
     if event == 'bingo':
         print("СУПЕР! Вы смогли угадать слово!\n")
         print("Использовано попыток :", game_info["attempt"])
+        log('System', 'Слово угадано.\n' +
+            'Попыток: '+str(game_info["attempt"]) + '\n' +
+            'Предлагаем начать заново'
+        )
 
     print(f'Было загадано слово: \"{game_info["secret_word"]}\"')
 
     answer = input("Хотите начать заново? (введите - \"да\")").lower()
+    log('User', 'Ответ пользователя: "'+answer+'"')
     if answer == "да" or answer == "lf":
         return False    # game continues
     else:
@@ -311,10 +334,13 @@ def main():
         while True:
             outcome_msg = game_make_attempt(game_info)
             if outcome_msg == 'tryagain':
+                log('System', 'Слово отклонено. Повтор попытки ввода')
                 continue
             elif outcome_msg != 'ok':
                 end_game(game_info, outcome_msg)
                 break
+
+            log('System', 'Слово принято')
 
             victory = game_check_attempt(game_info)
             if victory:
