@@ -5,9 +5,9 @@ def load_words_by_len(fname, word_length, shuffled=False):
     def read_nearest_valid_word(f):
         while True:
             w = f.readline().strip()
-            if w == '':                 # end of file
+            if w == '':  # end of file
                 return None
-            if len(w) == word_length:   # valid word found
+            if len(w) == word_length:  # valid word found
                 return w
 
     def make_random_offset(f):
@@ -23,7 +23,8 @@ def load_words_by_len(fname, word_length, shuffled=False):
     def count_lines_in_file():
         n = 0
         with (open(fname, 'r', encoding='utf-8') as f):
-            while f.readline() != '': n += 1
+            while f.readline() != '':
+                n += 1
         return n
 
     if shuffled:
@@ -81,21 +82,19 @@ def load_words_to_be_rated(rate_dict, rewise_rating=-1):
 
 
 def rate_word(w_rating, w):
-    max_rating = 6
-    r = w_rating.get(w, -1)
-    print(f"{w}. Rating: {r}. ", end='')
-    try:
-        new_r = int(input("Rate this word (0-5, ENTER to stop): "))
-    except ValueError:
-        return
+    max_rating = 5
+    old_r = w_rating.get(w, -1)
+    print(f"{w}. Rating: {old_r}. ", end='')
+    new_r = get_number("Rate this word (0-5, ENTER to stop): ")
+    if new_r is None:
+        return None
     if new_r not in range(0, max_rating + 1):
         print("Rate hasn't been accepted!")
-        return r
+        return old_r
     return new_r
 
 
 def rate_wordlist():
-
     print("Word rating mode activated.")
     print("""
         Enter word rating number (0-5) to rewise already rated words
@@ -104,8 +103,6 @@ def rate_wordlist():
     rewise_rating = get_number(': ', -1)
 
     w_rating = load_w_ratings()
-    if w_rating is None:
-        return
     print("Rated", len(w_rating.keys()), "words.")
     for w in load_words_to_be_rated(w_rating, rewise_rating):
         new_r = rate_word(w_rating, w)
@@ -115,7 +112,7 @@ def rate_wordlist():
         save_w_ratings(w_rating)
 
     print()
-
+    
 
 def get_number(prompt, default=None):
     # returns integer, or default otherwise
@@ -139,7 +136,7 @@ def load_words_by_level(lvl):
         elif level == 4:
             return (r == 2) or (r == 1)
         else:
-            return True
+            return False
 
     wr = load_w_ratings()
     result = [w for w, r in wr.items() if rate_fits_level(r, lvl)]
@@ -149,11 +146,15 @@ def load_words_by_level(lvl):
 def new_game(level):
     print("Началась новая игра. Вводите слова и следуйте подсказкам")
     word_list = load_words_by_level(level)
-    return {
-        "secret_word": word_list[randint(0, len(word_list)-1)],
-        "attempt": 0
-    }
-
+    if len(word_list) > 0:
+        new_word = word_list[randint(0, len(word_list) - 1)]
+        return {
+            "secret_word": new_word,
+            "attempt": 0
+        }
+    else:
+        return None
+    
 
 def word_is_valid(w):
     if len(w) != word_length:
@@ -174,6 +175,9 @@ def word_is_valid(w):
 def game_show_hints(game_info):
     hint_inc = game_info.get("hint_inc", '')
     hint_exc = game_info.get("hint_exc", '')
+    if (hint_inc is None) or (hint_exc is None):
+        return    # нет подсказок
+        
     if len(hint_inc) > 0 or len(hint_exc) > 0:
         print("Подсказка: ")
         if len(hint_inc) > 0:
@@ -183,20 +187,22 @@ def game_show_hints(game_info):
 
 
 def game_make_attempt(game_info):
-    if game_info["attempt"] >= max_attempt:
-        return end_game(game_info, event='noattempts')
-    game_info["attempt"] += 1
+    if game_info["attempt"] + 1 > max_attempt:
+        return 'noattempts'
 
     game_show_hints(game_info)
-    while True:
-        user_word = input()
-        if user_word == '':
-            return end_game(game_info)
-        if word_is_valid(user_word):
-            break
+    print()
+    user_word = input("Ваше слово: ")
+
+    if user_word == '':
+        return 'quit'
+    if not word_is_valid(user_word):
         print("Кажется это слово не подходит. Попробуйте еще раз")
+        return 'tryagain'
+
+    game_info["attempt"] += 1
     game_info["user_word"] = user_word.lower()
-    return True
+    return 'ok'
 
 
 def game_check_attempt(game_info):
@@ -210,16 +216,16 @@ def game_check_attempt(game_info):
     hint_include_letters = game_info.get("hint_inc", set())
     hint_exclude_letters = game_info.get("hint_exc", set())
 
-    w = game_info["user_word"]
-    s = game_info["secret_word"]
+    w = game_info["user_word"].replace('ё', 'е')
+    s = game_info["secret_word"].replace('ё', 'е')
 
     # check for exact letter guess (letter and pos)
     w_pos = -1
     for w_letter in w:
         w_pos += 1
         if w_letter == s[w_pos]:
-            result[w_pos] = 2       # 2 = letter and pos hit
-            s = replace_char(s, w_pos, '_')      # replace guessed letter, so it can't be hit twice
+            result[w_pos] = 2  # 2 = letter and pos hit
+            s = replace_char(s, w_pos, '_')  # replace guessed letter, so it can't be hit twice
             hint_include_letters.add(w_letter)
 
     # check for close letter guess (letter only)
@@ -230,19 +236,19 @@ def game_check_attempt(game_info):
             continue
         s_pos = s.find(w_letter)
         if s_pos >= 0:
-            result[w_pos] = 1       # 1 = letter hit
-            s = replace_char(s, s_pos, '_')      # replace guessed letter, so it can't be hit twice
+            result[w_pos] = 1  # 1 = letter hit
+            s = replace_char(s, s_pos, '_')  # replace guessed letter, so it can't be hit twice
             hint_include_letters.add(w_letter)
         else:
             hint_exclude_letters.add(w_letter)
 
     if sum(result) == word_length * 2:
-        return end_game(game_info, event='bingo')
+        return True
 
     game_info["hint_exc"] = (hint_exclude_letters - hint_include_letters)
     game_info["hint_inc"] = hint_include_letters
     game_info["result"] = result
-    return True
+    return False
 
 
 def game_draw_result(game_info):
@@ -252,17 +258,15 @@ def game_draw_result(game_info):
     for i in range(word_length):
         result_str += result_sym[result[i]]
 
-    print(result_str)
-    print()
+    return result_str
 
 
-def end_game(game_info, event=''):
-
-    if event == '':
+def end_game(game_info, event='quit'):
+    if event == 'quit':
         global terminate
         terminate = True
         print("Игра окончена")
-        return False
+        return True     # game actually ends
 
     if event == 'noattempts':
         print("К сожалению Вы использовали все попытки (\n")
@@ -270,16 +274,17 @@ def end_game(game_info, event=''):
         print("СУПЕР! Вы смогли угадать слово!\n")
         print("Использовано попыток :", game_info["attempt"])
 
-    print(f"Было загадано слово: \"{game_info["secret_word"]}\"")
+    print(f'Было загадано слово: \"{game_info["secret_word"]}\"')
 
     answer = input("Хотите начать заново? (введите - \"да\")").lower()
     if answer == "да" or answer == "lf":
-        return False
+        return False    # game continues
     else:
-        end_game(game_info)
+        return end_game(game_info)
 
 
 def main():
+    global game_info
 
     print("\t\t-= ВОРДЛИ =-")
     print()
@@ -299,12 +304,25 @@ def main():
             continue
 
         game_info = new_game(select)
-        while not terminate:
-            if not game_make_attempt(game_info):
+        if game_info is None:
+            print("Не удалось загадать слово для выбранного уровня сложности (")
+            exit()
+            
+        while True:
+            outcome_msg = game_make_attempt(game_info)
+            if outcome_msg == 'tryagain':
+                continue
+            elif outcome_msg != 'ok':
+                end_game(game_info, outcome_msg)
                 break
-            if not game_check_attempt(game_info):
+
+            victory = game_check_attempt(game_info)
+            if victory:
+                end_game(game_info, 'bingo')
                 break
-            game_draw_result(game_info)
+
+            print(game_draw_result(game_info))
+            print()
 
     print("До свидания!")
 
@@ -312,6 +330,7 @@ def main():
 max_attempt = 6
 word_length = 5
 terminate = False
+game_info = {}
 
 if __name__ == "__main__":
     main()
