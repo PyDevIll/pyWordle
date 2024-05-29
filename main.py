@@ -207,7 +207,7 @@ def game_make_attempt(game_info):
     log('System', f'Попытка {game_info["attempt"]+1} из {max_attempt}')
     game_show_hints(game_info)
     print()
-    user_word = input("Ваше слово: ")
+    user_word = input()
     log('User', 'Вводит слово "' + user_word + '"')
 
     if user_word == '':
