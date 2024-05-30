@@ -14,7 +14,7 @@ __get_number__ ( _prompt_ : str [, _default=None_ ] ) -> int
 ### возвращает:
 
 &nbsp;&nbsp;&nbsp;&nbsp;
-`int`, если успешно, иначе __default__
+`int`, если успешно, иначе _default_
 
 ------------------------------------
 
