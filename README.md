@@ -3,11 +3,11 @@
 ## Системные требования
 
 Для запуска игры:
-    Python 3.10.14
+- Python 3.10.14
 
 Для запуска тестов:
-    python311Packages.pytest 7.2.1
-    python311Packages.coverage 7.2.1
+- python311Packages.pytest 7.2.1
+- python311Packages.coverage 7.2.1
 
 ## Описание
 
