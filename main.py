@@ -201,7 +201,7 @@ def game_show_hints(game_info):
 
 
 def game_make_attempt(game_info):
-    if game_info["attempt"] + 1 > max_attempt:
+    if game_info["attempt"] >= max_attempt:
         return 'noattempts'
 
     log('System', f'Попытка {game_info["attempt"]+1} из {max_attempt}')
@@ -278,11 +278,11 @@ def game_draw_result(game_info):
 
 
 def end_game(game_info, event='quit'):
+    global terminate
     if event == 'quit':
-        global terminate
-        terminate = True
         print("Игра окончена")
         log('System', 'Игрок пожелал покинуть игру. Завершение программы\n')
+        terminate = True
         return True     # game actually ends
 
     if event == 'noattempts':
@@ -308,7 +308,8 @@ def end_game(game_info, event='quit'):
 
 def main():
     global game_info
-
+    global terminate
+    
     print("\t\t-= ВОРДЛИ =-")
     print()
     print(f"Угадайте загаданное слово из {word_length} букв за {max_attempt} попыток")
@@ -355,8 +356,8 @@ def main():
 
 max_attempt = 6
 word_length = 5
-terminate = False
 game_info = {}
+terminate = False
 
 if __name__ == "__main__":
     main()

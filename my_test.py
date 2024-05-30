@@ -320,7 +320,7 @@ def test_game_show_hints():
     
 
 def test_game_make_attempt():
-    main.input = lambda _: input_case["user_input"]
+    main.input = lambda _='': input_case["user_input"]
 
     input_cases = [
         {"user_input": '', "outcome_msg": 'quit'},
