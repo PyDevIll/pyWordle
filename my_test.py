@@ -38,9 +38,9 @@ words_rated_txt = {
 
 def fake__load_words_by_len(fname, word_length, shuffled=False):
     # generator
-    for w in russian_nouns_txt:
-        if len(w) == word_length:
-            yield w
+    for word in russian_nouns_txt:
+        if len(word) == word_length:
+            yield word
 
 
 def fake__load_w_ratings():
@@ -63,21 +63,21 @@ def test_load_words_to_be_rated():
 
     # when we want to re-rate previously rated words
     # if returned words are rated as specified by rewise_rating?
-    for rewise_rating in range(0, 6):
-        for w in main.load_words_to_be_rated(w_rating, rewise_rating):
-            assert w_rating[w] == rewise_rating
-            assert len(w) == main.word_length
+    for revise_rating in range(0, 6):
+        for word in main.load_words_to_be_rated(w_rating, revise_rating):
+            assert w_rating[word] == revise_rating
+            assert len(word) == main.word_length
             
     # when we want to rate never rated words
     # if returned words are indeed unrated before?
-    for w in main.load_words_to_be_rated(w_rating, -1):
-        assert w not in w_rating
-        assert len(w) == main.word_length
+    for word in main.load_words_to_be_rated(w_rating, -1):
+        assert word not in w_rating
+        assert len(word) == main.word_length
 
     # test unexisted rating numbers
     not_entered = True
-    for rewise_rating in [-2, 6, 7, 10, 100, 999_999_999]:
-        for w in main.load_words_to_be_rated(w_rating, rewise_rating):
+    for revise_rating in [-2, 6, 7, 10, 100, 999_999_999]:
+        for word in main.load_words_to_be_rated(w_rating, revise_rating):
             not_entered = False        # cycle should not be entered
             
     assert not_entered
@@ -102,13 +102,13 @@ def test_rate_word():
     # when we want to modify rating
     # does rating change to a new value or stays unchanged as expected?
     w_rating = fake__load_w_ratings()
-    for w, r in w_rating.items():
+    for word, rate in w_rating.items():
         for input_case in input_cases:
-            returned_value = main.rate_word(w_rating, w)
+            returned_value = main.rate_word(w_rating, word)
             if input_case['changed']:
                 assert returned_value == input_case['result']
             else:
-                assert returned_value == r    # if returned rate is unchanged?
+                assert returned_value == rate    # if returned rate is unchanged?
     
     main.input = input
     
@@ -420,56 +420,3 @@ def test_end_game():
         assert main.terminate == input_case["result"]
 
     main.input = input
-
-
-"""
-    scenario_step = -1
-    
-                        # !!! couldn't implement !!! 
-    def test_main():
-        def fake_input(prompt=''):
-            global scenario_step
-            scenario_step += 1
-            return scenario[scenario_step][prompt]
-    
-        main.input = fake_input
-        main.randint = lambda a, b: 1       # no random during tests
-    
-        global words_rated_txt
-        words_rated_txt = {
-            "шпала": 0,
-            "хряст": 1,
-            "ворог": 2,
-            "фьорд": 3,
-            "жатва": 4,
-            "носач": 3,
-            "олово": 5
-        }
-        global scenario_step
-    
-        scenario = [
-            {"Ваш выбор (1-4, ENTER - выход): ": "5"},       # go into rate mode
-            {": ": "0"},                                     # select words with rating 0
-            {"Rate this word (0-5, ENTER to stop): ": "5"},  # change rate to 5
-            {"Ваш выбор (1-4, ENTER - выход): ": ""},        # exit
-        ]
-        scenario_step = -1
-        main.main()
-        assert words_rated_txt["шпала"] == 5        # !!!  fails to change value !!!
-    
-        scenario = [
-            {"Ваш выбор (1-4, ENTER - выход): ": "2"},
-            {"Ваше слово: ": "жатва"},
-            {"Хотите начать заново? (введите - \"да\")": ""}
-        ]
-        scenario_step = -1
-        main.main()
-        assert main.game_info == {
-            "user_word": "жатва",
-            "secret_word": "жатва",
-            "attempt": 1,
-        }
-    
-        main.input = input
-"""
-
