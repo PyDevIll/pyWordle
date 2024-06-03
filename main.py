@@ -10,113 +10,113 @@ def log(agent, msg):
 
 
 def load_words_by_len(fname, word_length, shuffled=False):
-    def read_nearest_valid_word(f):
+    def read_nearest_valid_word(f_txt):
         while True:
-            w = f.readline().strip()
-            if w == '':  # end of file
+            word = f_txt.readline().strip()
+            if word == '':  # end of file
                 return None
-            if len(w) == word_length:  # valid word found
-                return w
+            if len(word) == word_length:  # valid word found
+                return word
 
-    def make_random_offset(f):
-        if not f.closed:
-            f.close()
+    def make_random_offset(f_txt):
+        if not f_txt.closed:
+            f_txt.close()
         # reset file position by reopening
-        f = open(fname, 'r', encoding='utf-8')
+        f_txt = open(fname, 'r', encoding='utf-8')
         offset = randint(0, line_count)
         for i in range(offset):
-            f.readline()
-        return f
+            f_txt.readline()
+        return f_txt
 
     def count_lines_in_file():
-        n = 0
+        count = 0
         with (open(fname, 'r', encoding='utf-8') as f):
             while f.readline() != '':
-                n += 1
-        return n
+                count += 1
+        return count
 
     if shuffled:
         line_count = count_lines_in_file()
-        f = open(fname, 'r', encoding='utf-8')
+        f_nouns = open(fname, 'r', encoding='utf-8')
         while True:
-            f = make_random_offset(f)
-            w = read_nearest_valid_word(f)
-            if w is None:
+            f_nouns = make_random_offset(f_nouns)
+            noun = read_nearest_valid_word(f_nouns)
+            if noun is None:
                 continue
-            yield w
+            yield noun
     else:
-        with (open(fname, 'r', encoding='utf-8') as f):
+        with (open(fname, 'r', encoding='utf-8') as f_nouns):
             while True:
-                w = read_nearest_valid_word(f)
-                if w is None:
+                noun = read_nearest_valid_word(f_nouns)
+                if noun is None:
                     break
-                yield w
+                yield noun
 
-    if not f.closed:
-        f.close()
+    if not f_nouns.closed:
+        f_nouns.close()
 
 
 def load_w_ratings():
     try:
-        f = open("words_rated.txt", 'r', encoding="utf-8")
+        f_rates = open("words_rated.txt", 'r', encoding="utf-8")
     except FileNotFoundError:
         return
     w_rating = {}
-    with f:
+    with f_rates:
         while True:
-            s = f.readline().strip()
-            if s == '':
+            line = f_rates.readline().strip()
+            if line == '':
                 break
-            word, rate = s.split(", ")
+            word, rate = line.split(", ")
             w_rating[word] = int(rate)
         return w_rating
 
 
 def save_w_ratings(w_rating):
-    with open("words_rated.txt", 'w', encoding="utf-8") as f:
-        for w, r in w_rating.items():
-            f.write(f'{w}, {r}\n')
+    with open("words_rated.txt", 'w', encoding="utf-8") as f_rates:
+        for word, rate in w_rating.items():
+            f_rates.write(f'{word}, {rate}\n')
 
 
-def load_words_to_be_rated(rate_dict, rewise_rating=-1):
-    if rewise_rating == -1:
-        for w in load_words_by_len("russian_nouns.txt", word_length, shuffled=True):
-            if w not in rate_dict:
-                yield w
+def load_words_to_be_rated(rate_dict, revise_rating=-1):
+    if revise_rating == -1:
+        for word in load_words_by_len("russian_nouns.txt", word_length, shuffled=True):
+            if word not in rate_dict:
+                yield word
     else:
-        for w, r in rate_dict.items():
-            if r == rewise_rating:
-                yield w
+        for word, rate in rate_dict.items():
+            if rate == revise_rating:
+                yield word
 
 
-def rate_word(w_rating, w):
+def rate_word(w_rating, word):
     max_rating = 5
-    old_r = w_rating.get(w, -1)
-    print(f"{w}. Rating: {old_r}. ", end='')
-    new_r = get_number("Rate this word (0-5, ENTER to stop): ")
-    if new_r is None:
+    old_rate = w_rating.get(word, -1)
+    print(f"{word}. Rating: {old_rate}. ", end='')
+    new_rate = get_number("Rate this word (0-5, ENTER to stop): ")
+    if new_rate is None:
         return None
-    if new_r not in range(0, max_rating + 1):
+    if new_rate not in range(0, max_rating + 1):
         print("Rate hasn't been accepted!")
-        return old_r
-    return new_r
+        return old_rate
+    return new_rate
 
 
 def rate_wordlist():
     print("Word rating mode activated.")
     print("""
-        Enter word rating number (0-5) to rewise already rated words
+        Enter word rating number (0-5) to revise already rated words
         or press ENTER to rate new words
     """)
-    rewise_rating = get_number(': ', -1)
+    revise_rating = get_number(': ', -1)
 
     w_rating = load_w_ratings()
     print("Rated", len(w_rating.keys()), "words.")
-    for w in load_words_to_be_rated(w_rating, rewise_rating):
-        new_r = rate_word(w_rating, w)
-        if new_r is None:
+    for word in load_words_to_be_rated(w_rating, revise_rating):
+        new_rate = rate_word(w_rating, word)
+        if new_rate is None:
             break
-        w_rating[w] = new_r
+        w_rating[word] = new_rate
         save_w_ratings(w_rating)
 
     print()
@@ -134,20 +134,20 @@ def get_number(prompt, default=None):
 
 
 def load_words_by_level(lvl):
-    def rate_fits_level(r, level):
+    def rate_fits_level(rate, level):
         if level == 1:
-            return r == 5
+            return rate == 5
         elif level == 2:
-            return (r == 5) or (r == 4)
+            return (rate == 5) or (rate == 4)
         elif level == 3:
-            return (r == 4) or (r == 3)
+            return (rate == 4) or (rate == 3)
         elif level == 4:
-            return (r == 2) or (r == 1)
+            return (rate == 2) or (rate == 1)
         else:
             return False
 
-    wr = load_w_ratings()
-    result = [w for w, r in wr.items() if rate_fits_level(r, lvl)]
+    w_rating = load_w_ratings()
+    result = [word for word, rate in w_rating.items() if rate_fits_level(rate, lvl)]
     return result
 
 
@@ -166,20 +166,20 @@ def new_game(level):
         return None
     
 
-def word_is_valid(w):
-    if len(w) != word_length:
+def word_is_valid(word):
+    if len(word) != word_length:
         log('System', f'Длина слова отличается от заданной в игре ({word_length})')
         return False
 
     cyr_letters = "абвгдеёзжийклмнопрстуфхцчшщъыьэюя"
-    if not all(w_letter in cyr_letters for w_letter in w):
+    if not all(word_letter in cyr_letters for word_letter in word):
         log('System', 'Слово содержит некириллические символы')
         return False
 
-    w = w.replace("ё", "е")
+    word = word.replace("ё", "е")
     # check if w in dictionary
-    for w_dict in load_words_by_len("russian_nouns.txt", word_length):
-        if w_dict.replace("ё", "е") == w:
+    for noun_from_txt in load_words_by_len("russian_nouns.txt", word_length):
+        if noun_from_txt.replace("ё", "е") == word:
             return True
 
     log('System', 'Слово не входит в словарь russian_nouns.txt')
@@ -232,31 +232,33 @@ def game_check_attempt(game_info):
     hint_include_letters = game_info.get("hint_inc", set())
     hint_exclude_letters = game_info.get("hint_exc", set())
 
-    w = game_info["user_word"].replace('ё', 'е')
-    s = game_info["secret_word"].replace('ё', 'е')
+    user_word = game_info["user_word"].replace('ё', 'е')
+    secret_word = game_info["secret_word"].replace('ё', 'е')
 
     # check for exact letter guess (letter and pos)
-    w_pos = -1
-    for w_letter in w:
-        w_pos += 1
-        if w_letter == s[w_pos]:
-            result[w_pos] = 2  # 2 = letter and pos hit
-            s = replace_char(s, w_pos, '_')  # replace guessed letter, so it can't be hit twice
-            hint_include_letters.add(w_letter)
+    user_word_pos = -1
+    for user_word_letter in user_word:
+        user_word_pos += 1
+        if user_word_letter == secret_word[user_word_pos]:
+            result[user_word_pos] = 2  # 2 = letter and pos hit
+            # replace guessed letter, so it can't be hit twice
+            secret_word = replace_char(secret_word, user_word_pos, '_')
+            hint_include_letters.add(user_word_letter)
 
     # check for close letter guess (letter only)
-    w_pos = -1
-    for w_letter in w:
-        w_pos += 1
-        if result[w_pos] != 0:
+    user_word_pos = -1
+    for user_word_letter in user_word:
+        user_word_pos += 1
+        if result[user_word_pos] != 0:
             continue
-        s_pos = s.find(w_letter)
-        if s_pos >= 0:
-            result[w_pos] = 1  # 1 = letter hit
-            s = replace_char(s, s_pos, '_')  # replace guessed letter, so it can't be hit twice
-            hint_include_letters.add(w_letter)
+        secret_word_pos = secret_word.find(user_word_letter)
+        if secret_word_pos >= 0:
+            result[user_word_pos] = 1  # 1 = letter hit
+            # replace guessed letter, so it can't be hit twice
+            secret_word = replace_char(secret_word, secret_word_pos, '_')
+            hint_include_letters.add(user_word_letter)
         else:
-            hint_exclude_letters.add(w_letter)
+            hint_exclude_letters.add(user_word_letter)
 
     if sum(result) == word_length * 2:
         return True
