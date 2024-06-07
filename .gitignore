@@ -1,0 +1,8 @@
+.breakpoints
+.coverage
+.replit
+main.cpython-311-pytest-7.2.1.pyc
+my_test.cpython-311-pytest-7.2.1.pyc
+main.cpython-311.pyc
+replit.nix
+log.txt
